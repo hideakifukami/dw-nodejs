@@ -1,0 +1,90 @@
+<div class="container text-center">
+    <div class="row">
+        <div class="col-1">
+            &nbsp;
+        </div>
+        <div class="col bg-primary">
+            <nav class="navbar bg-primary navbar-expand-lg" data-bs-theme="dark">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="#">SISTEMA WEB</a>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                        <div class="navbar-nav">
+                            <a class="nav-link active" aria-current="page" href="/">Cadastrar</a>
+                            <a class="nav-link" href="/consulta">Consultar</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+        <div class="col-1">
+            &nbsp;
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-1">
+            &nbsp;
+        </div>
+        <div class="col bg-white">
+            &nbsp;
+        </div>
+        <div class="col-1">
+            &nbsp;
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-1">
+            &nbsp;
+        </div>
+        <div class="col bg-white">
+            <p class="text-start fs-5">Cadastrar - Agendamento de Potenciais Clientes</p>
+            <p class="text-start fs-6">Sistema utilizado para agendamento de serviços.</p>
+            <p>
+                <div class="container text-center">
+                    <div class="row bg-primary p-2 mb-3">
+                        <div class="col text-light"> Nome </div>
+                        <div class="col text-light"> Endereço </div>
+                        <div class="col text-light"> Bairro </div>
+                        <div class="col text-light"> CEP </div>
+                        <div class="col text-light"> Editar / Excluir </div>
+                    </div> 
+                    {{#each post}} {{#dataValues}} 
+                    <div class="row">
+                        <div class="col"> {{nome}} </div>
+                        <div class="col"> {{endereco}} </div>
+                        <div class="col"> {{bairro}} </div>
+                        <div class="col"> {{cep}} </div>
+                        <div class="col">
+                            <button class="btn btn-primary"><a href="/editar/{{id}}" style="color:inherit">Edit</a></button>
+                            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" onclick="confirmDeleteModal('10')">Delete</button>
+                            
+                            <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Tem certeza que gostaria de excluir o registro selecionado?
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="button" class="btn btn-danger" id="confirmDelete"><a href="/excluir/{{id}}" style="color:inherit">Delete</a></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> {{/dataValues}} {{/each}}
+                </div>
+                
+            </p>
+        </div>
+        <div class="col-1">
+            &nbsp;
+        </div>
+    </div>
+</div>
