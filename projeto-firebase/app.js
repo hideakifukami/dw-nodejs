@@ -30,11 +30,24 @@ app.get("/consulta", function(req, res){
             snapshot.forEach((doc) => {
                 agendamentos.push({ id: doc.id, ...doc.data() });
             });
-            res.render("consulta", { post: agendamentos });
+            res.render("consulta", { agendamento: agendamentos });
         })
         .catch((error) => {
             console.error("Erro ao consultar agendamentos: ", error);
         });
+})
+
+app.post("/cadastrar", function(req, res){
+    db.collection('agendamentos').add({
+        nome: req.body.nome,
+        telefone: req.body.telefone,
+        origem: req.body.origem,
+        data_contato: req.body.data_contato,
+        observacao: req.body.observacao
+    }).then(function(){
+        console.log('Registro adicionado');
+        res.redirect('/')
+    })
 })
 
 app.get("/editar/:id", function(req, res){
@@ -62,19 +75,6 @@ app.get("/excluir/:id", function(req, res){
         .catch((error) => {
             console.error("Erro ao excluir agendamento: ", error);
         });
-})
-
-app.post("/cadastrar", function(req, res){
-    db.collection('agendamentos').add({
-        nome: req.body.nome,
-        telefone: req.body.telefone,
-        origem: req.body.origem,
-        data_contato: req.body.data_contato,
-        observacao: req.body.observacao
-    }).then(function(){
-        console.log('Registro adicionado');
-        res.redirect('/')
-    })
 })
 
 app.post("/atualizar", function(req, res){
