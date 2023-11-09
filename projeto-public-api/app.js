@@ -7,11 +7,27 @@ const { getFirestore, Timestamp, FieldValue } = require('firebase-admin/firestor
 const { query, collection, orderBy, getDocs, limit } = require('firebase/firestore');
 const serviceAccount = require('./bard-app-d299e-firebase-adminsdk-w63kf-e649ed2c3d.json')
 
+
 initializeApp({
   credential: cert(serviceAccount)
 })
 
 const db = getFirestore()
+
+// Defina a referência para o documento 'autoincrement'
+const autoIncrementRef = db.collection('recomendacoes').doc('autoincrement');
+
+// Verifique se o documento 'autoincrement' já existe e, se não, crie-o com um ID inicial
+autoIncrementRef.get()
+  .then((doc) => {
+    if (!doc.exists) {
+      return autoIncrementRef.set({ count: 0 });
+    }
+  })
+  .catch((error) => {
+    console.error('Erro ao verificar/criar o documento de autoincrement:', error);
+  });
+
 
 app.engine("handlebars", handlebars({defaultLayout: "main"}))
 app.set("view engine", "handlebars")
@@ -25,19 +41,28 @@ app.get("/", function(req, res){
     res.render("home")
 })
 
-app.get("/recomendacoes", async function(req, res){
-    const recomendacao = await db.collection('recomendacoes').orderBy('timestamp', 'desc').limit(1).get()
-    console.log(recomendacao)
-    if (doc.exists) {
-        res.render("recomendacoes", { recomendacao: doc.id, ...doc.data()  });
-    } else {
-        res.status(404).send("Recomendação não encontrado");
-    }
+app.get("/recomendacoes/:count", async (req, res) => {
+    const count = parseInt(req.params.count);
+    await db.collection('recomendacoes').where('count', '==', count).limit(1).get()
+        .then((snapshot) => {
+            if (!snapshot.empty) {
+                const doc = snapshot.docs[0];
+                res.render("recomendacoes", {                     
+                    recomendacao: doc.data(), count: count,
+                    style: '<link rel="stylesheet" href="/css/card.css">'
+                });
+            } else {
+                res.status(404).send("Recomendação não encontrada");
+            }
+        })
+        .catch((error) => {
+            console.error("Erro ao buscar recomendacao: ", error);
+        });
     
 });
 
+app.post("/info", async (req, res) => {
 
-app.post("/info", function(req, res){
     db.collection('informacoes').add({
         genero: req.body.genero,
         gosto: req.body.gosto,
@@ -56,7 +81,7 @@ app.post("/info", function(req, res){
 
         const { default: Bard } = await import('bard-ai');
       
-        const COOKIE = 'cwiE7nKHZYFVbS32suuKr-Z1h7zlq6_fIVe7WNfaTcRCF_r66AaKtcwJthr0qV1AHLkiUw.';
+        const COOKIE = 'cwiE7h90UbLpipaxmRoz_rqCL80dGIfsDaKdbuAPlDMKHorHw5puFr8R1jw253jV5h4ogg.';
       
         const bard = new Bard(COOKIE);
     
@@ -125,38 +150,52 @@ app.post("/info", function(req, res){
             let tituloCinco = responseCinco.substring(responseCinco.indexOf("titulo") + 9, responseCinco.indexOf("descricao") - 5);
             let descricaoCinco = responseCinco.substring(responseCinco.indexOf("descricao") + 12, responseCinco.indexOf('}'));
             
-            db.collection('recomendacoes').add({
-                um: {
-                    titulo: tituloUm,
-                    descricao: descricaoUm
-                },
-                dois: {
-                    titulo: tituloDois,
-                    descricao: descricaoDois
-                },
-                tres: {
-                    titulo: tituloTres,
-                    descricao: descricaoTres
-                },
-                quatro: {
-                    titulo: tituloQuatro,
-                    descricao: descricaoQuatro
-                },
-                cinco: {
-                    titulo: tituloCinco,
-                    descricao: descricaoCinco
-                },
-                timestamp: new Date()
+            const recomendacoesRef = db.collection('recomendacoes');
 
-            })
+            let count = 0;
+            let docRef;
 
-            console.log("Recomendações criadas.");
-            
+            await db.runTransaction(async (transaction) => {
+                docRef = recomendacoesRef.doc('autoincrement');
+                const doc = await transaction.get(docRef);
+                count = doc.data().count + 1;
+                transaction.update(docRef, {count: count});
+                
+            }).then(async () => {
+                return await recomendacoesRef.add({
+                    count: count,
+                    um: {
+                        titulo: tituloUm,
+                        descricao: descricaoUm
+                    },
+                    dois: {
+                        titulo: tituloDois,
+                        descricao: descricaoDois
+                    },
+                    tres: {
+                        titulo: tituloTres,
+                        descricao: descricaoTres
+                    },
+                    quatro: {
+                        titulo: tituloQuatro,
+                        descricao: descricaoQuatro
+                    },
+                    cinco: {
+                        titulo: tituloCinco,
+                        descricao: descricaoCinco
+                    },
+                    timestamp: new Date()
+                });
+            }).then(() => {
+                console.log("Recomendações criadas.");
+                res.redirect('/recomendacoes/' + count);
+            }).catch((error) => {
+                console.error('Erro na transação:', error);
+            });
 
-        } catch (error) {
+        } catch (error)  {
             console.error('Erro:', error);
         }
-        res.redirect('/recomendacoes')
     })
 })
 
